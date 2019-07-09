@@ -19,14 +19,6 @@ type ElasticLog struct {
 	Client   *elastic.Client
 }
 
-// logMessage is a struct that represents the data that is sent to Elasticsearch, this is the index we see in kibana
-// replace logMessage with the struct you want, or improve the write method so that It can handle generic json material or XML
-type logMessage struct {
-	Err       string    `json:"error"`
-	Timestamp time.Time `json:"timestamp"`
-	System    string    `json:"system"`
-}
-
 //IndexExists checks if there is such a index
 func (logger *ElasticLog) IndexExists(index string) (exist bool, err error) {
 	// Use the IndexExists service to check if a specified index exists.
@@ -57,14 +49,11 @@ func (logger *ElasticLog) Write(data []byte) (int, error) {
 			// Not acknowledged
 		}
 	}
-	message := string(data[:])
-	// Index a logMessage (using JSON serialization)
-	logMsg := logMessage{Err: message, Timestamp: time.Now(), System: logger.System}
 	_, err := logger.Client.Index().
 		Index(index).
 		Type("error").
 		// 		Id("4").
-		BodyJson(logMsg).
+		BodyJson(string(data)).
 		Do()
 	if err != nil {
 		// Handle error
